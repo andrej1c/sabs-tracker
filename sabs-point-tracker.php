@@ -20,15 +20,15 @@ LEFT JOIN wp_posts p ON p.ID = tr.object_id
 LEFT JOIN wp_postmeta pm ON pm.post_id = p.ID
 WHERE tt.taxonomy = 'category'
 AND tt.parent = 3
-AND pm.meta_key = 'points'
+AND pm.meta_key = 'sabs_points'
 GROUP BY t.term_id";
-	$report_query_alpha = $query_guts . " ORDER BY t.name ASC";
+	$report_query_alpha  = $query_guts . " ORDER BY t.name ASC";
 	$report_query_points = $query_guts . " ORDER BY points DESC";
 	?>
 
 	<?php
-	$report_alpha = $wpdb->get_results($report_query_alpha);
-	$report_points = $wpdb->get_results($report_query_points);
+	$report_alpha  = $wpdb->get_results( $report_query_alpha );
+	$report_points = $wpdb->get_results( $report_query_points );
 	?>
 
 	<h3>Points (ordered by first name)</h3>
@@ -74,7 +74,7 @@ function sabs_show_points( $content ) {
 	global $post;
 	$points = '';
 	if ( is_a( $post, 'WP_Post' ) ) {
-		$points = get_post_meta( $post->ID, 'points', true );
+		$points = get_post_meta( $post->ID, 'sabs_points', true );
 	}
 	if ( ! empty( $points ) ) {
 		$content = sprintf( '<h3>Points: %d</h3>', $points ) . $content;
@@ -82,3 +82,5 @@ function sabs_show_points( $content ) {
 	return $content;
 }
 add_filter( 'the_content', 'sabs_show_points' );
+
+require_once 'points-metabox.php';
