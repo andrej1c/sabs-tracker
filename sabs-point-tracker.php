@@ -1,6 +1,13 @@
 <?php
 /* 
- * Plugin Name: SABS Point Tracker
+ * Plugin Name: SABS Tracker
+ * Description: WordPress plugin for tracking how students earn and spend points in a program.
+ * Author: Andrej Ciho, South Atlanta Bike Shop
+ * Plugin URI:  https://github.com/andrej1c/sabs-tracker
+ * License: GPLv2 or later
+ * License URI: http://www.gnu.org/licenses/gpl-2.0.html
+ * Tested up to: 4.5.1
+ * Author URI: http://southatlanta.bike
  */
 
 /**
