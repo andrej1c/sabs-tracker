@@ -18,7 +18,12 @@ This is a WordPress plugin that was developed for the South Atlanta Bike Shop to
 * (Optional) Create a menu with two items: Home and Points Report
 * (Optional) Add a sidebar widget listing all categories. This gives you quick access to detailed history of individual students
 
-## Usage Tips
+## Usage
+
+* Create a post, select category (person's name), add description into post body, add points to the "Points" field. This could be positive (e.g. 5) or negative (e.g. -10).
+* publish post
+
+## Tips
 
 * Sometimes if a group of students participated in the same activity with the same amount of points, you can use one post and select multiple categories.
 * Whenever the amount of points is outside of the ordinary, use the post content to give details. This helps explain the students the reasons long after you've forgoten.
