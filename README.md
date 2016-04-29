@@ -1,4 +1,4 @@
-# sabs-tracker
+# SABS Tracker
 
 This is a WordPress plugin that was developed for the South Atlanta Bike Shop to track points each student earns and spends as well as details about each activity. It can be used for any program that needs to track earning and spending points.
 
