@@ -70,7 +70,7 @@ function sabs_register_schedule_post_type() {
 		'public'     => true,
 		'taxonomies' => array( 'category' ),
 		'label'      => 'Schedule',
-		'supports'   => array( '' ),
+		'supports'   => array( 'editor' ),
     );
     register_post_type( 'sabs_schedule', $args );
 }
@@ -182,6 +182,8 @@ function sabs_schedule_view() {
 		$today_post_id = sabs_get_day_post( $today );
 		if ( ! empty( $today_post_id ) ) {
 			edit_post_link( 'Edit', '', '', $today_post_id, '' );
+			setup_postdata( $today_post_id );
+			the_content();
 			// get categories
 			$today_categories_a = wp_get_post_categories( $today_post_id, array( 'fields' => 'names' ) );
 			$today_categories = array();
