@@ -92,5 +92,3 @@ add_filter( 'the_content', 'sabs_show_points' );
 
 require_once 'points-metabox.php';
 require_once 'scheduling.php';
-
-require_once 'page-debug.php';
