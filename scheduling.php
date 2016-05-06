@@ -178,7 +178,7 @@ function sabs_schedule_view() {
 		} else {
 			$today = sabs_tomorrow( $today );
 		}
-		printf( '<p>%s</p>', sabs_pretty_date( $today ) );
+		printf( '<p><strong>%s</strong></p>', sabs_pretty_date( $today ) );
 		$today_post_id = sabs_get_day_post( $today );
 		if ( ! empty( $today_post_id ) ) {
 			edit_post_link( 'Edit', '', '', $today_post_id, '' );
