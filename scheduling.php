@@ -63,7 +63,7 @@ function sabs_get_or_create_post( $date = null ) {
 }
 
 /**
- * Register schedule taxonomy
+ * Register schedule post type
  */
 function sabs_register_schedule_post_type() {
 	$args = array(
