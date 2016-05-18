@@ -10,15 +10,10 @@
  * Author URI: http://southatlanta.bike
  */
 
-/**
- * Show report
- * @global class $wpdb
- * @return string HTML report
- */
-function sabs_report() {
-	global $wpdb;
-	ob_start();
-	$query_guts = "
+function sabs_get_points_query( $student_category_id = 0 ) {
+	if ( empty( $student_category_id ) ) {
+		// Refactor to not have a hard coded category ID
+		return "
 SELECT t.name, SUM(pm.meta_value) as points
 FROM wp_terms t
 INNER JOIN wp_term_taxonomy tt ON tt.term_id = t.term_id
@@ -29,6 +24,30 @@ WHERE tt.taxonomy = 'category'
 AND tt.parent = 3
 AND pm.meta_key = 'sabs_points'
 GROUP BY t.term_id";
+	} else {
+		return sprintf( "
+SELECT t.name, SUM(pm.meta_value) as points
+FROM wp_terms t
+INNER JOIN wp_term_taxonomy tt ON tt.term_id = t.term_id
+LEFT JOIN wp_term_relationships tr ON tr.term_taxonomy_id = tt.term_taxonomy_id
+LEFT JOIN wp_posts p ON p.ID = tr.object_id
+LEFT JOIN wp_postmeta pm ON pm.post_id = p.ID
+WHERE tt.taxonomy = 'category'
+AND tt.term_id = %d
+AND pm.meta_key = 'sabs_points'
+GROUP BY t.term_id", $student_category_id );
+	}
+}
+
+/**
+ * Show report
+ * @global class $wpdb
+ * @return string HTML report
+ */
+function sabs_report() {
+	global $wpdb;
+	ob_start();
+	$query_guts = sabs_get_points_query();
 	$report_query_alpha  = $query_guts . " ORDER BY t.name ASC";
 	$report_query_points = $query_guts . " ORDER BY points DESC";
 	?>
@@ -90,6 +109,16 @@ function sabs_show_points( $content ) {
 }
 add_filter( 'the_content', 'sabs_show_points' );
 
+function my_page_template_redirect() {
+	if ( is_category() && ! isset( $_GET[ 'view_archive' ] ) ) {
+		wp_redirect( home_url( '/student-report/?student=' . get_query_var('cat') ) );
+        exit();
+	}
+}
+add_action( 'template_redirect', 'my_page_template_redirect' );
+
 require_once 'points-metabox.php';
 require_once 'scheduling.php';
 require_once 'skills.php';
+require_once 'goals.php';
+require_once 'youth-report.php';
