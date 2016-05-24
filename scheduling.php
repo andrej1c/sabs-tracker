@@ -191,7 +191,7 @@ function sabs_schedule_view() {
 				foreach ( $today_categories_a as $category_name ) {
 					$today_categories[] = $category_name;
 				}
-				printf( '<p>Signed Up (%d): %s</p>', count( $today_categories ), implode( ', ', $today_categories ) );
+				printf( '<p>Signed Up (%d): </p><ul><li>%s</li></ul>', count( $today_categories ), implode( '</li><li>', $today_categories ) );
 			} else {
 				print '<p>Schedule set but no people selected.</p>';
 			}	
