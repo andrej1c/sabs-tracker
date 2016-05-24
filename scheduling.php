@@ -181,7 +181,7 @@ function sabs_schedule_view() {
 		printf( '<p><strong>%s</strong></p>', sabs_pretty_date( $today ) );
 		$today_post_id = sabs_get_day_post( $today );
 		if ( ! empty( $today_post_id ) ) {
-			edit_post_link( 'Edit', '', '', $today_post_id, '' );
+			// edit_post_link( 'Edit', '', '', $today_post_id, '' );
 			setup_postdata( $today_post_id );
 			the_content();
 			// get categories
