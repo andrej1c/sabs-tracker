@@ -122,3 +122,4 @@ require_once 'scheduling.php';
 require_once 'skills.php';
 require_once 'goals.php';
 require_once 'youth-report.php';
+require_once 'tracker-settings.php';
