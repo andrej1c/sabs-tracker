@@ -18,8 +18,12 @@ function sabs_student( $content ) {
 	 * Points
 	 */
 	global $wpdb;
-	$points_query = sabs_get_points_query( $student_category_id );
-	$points = $wpdb->get_results( $points_query );
+	$points_query	 = sabs_get_points_query( $student_category_id );
+	if ( false === ( $points			 = get_transient( 'student_points_transient_' . $student_category_id ) ) ) {
+		// It wasn't there, so regenerate the data and save the transient
+		$points = $wpdb->get_results( $points_query );
+		set_transient( 'student_points_transient_' . $student_category_id, $points, 1 * HOUR_IN_SECONDS );
+	}
 	printf( '<h2>Student: %s</h2>', $points[0]->name );
 	printf( '<h3>Current Points: %s</h3>', $points[0]->points );
 	printf( '<p><a href="%s?view_archive=yes">View Points History</a></p>', get_category_link( $student_category_id ) );

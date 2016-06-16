@@ -63,14 +63,24 @@ function sabs_report() {
 	global $wpdb;
 	ob_start();
 	$tracker_categories	 = get_option( 'sabs_tracker_categories' );
-	$query_guts			 = sabs_get_points_query( 0, $tracker_categories[ 'youth_category' ] );
+	$cat				 = $tracker_categories[ 'youth_category' ];
+	$query_guts			 = sabs_get_points_query( 0, $cat );
 	$report_query_alpha  = $query_guts . " ORDER BY t.name ASC";
 	$report_query_points = $query_guts . " ORDER BY points DESC";
 	?>
 
 	<?php
-	$report_alpha  = $wpdb->get_results( $report_query_alpha );
-	$report_points = $wpdb->get_results( $report_query_points );
+	if ( false === ( $report_alpha		 = get_transient( 'report_alpha_transient_' . $cat ) ) ) {
+		// It wasn't there, so regenerate the data and save the transient
+		$report_alpha = $wpdb->get_results( $report_query_alpha );
+		set_transient( 'report_alpha_transient_' . $cat, $report_alpha, 1 * HOUR_IN_SECONDS );
+	}
+
+	if ( false === ( $report_points = get_transient( 'report_points_transient_' . $cat ) ) ) {
+		// It wasn't there, so regenerate the data and save the transient
+		$report_points = $wpdb->get_results( $report_query_points );
+		set_transient( 'report_points_transient_' . $cat, $report_points, 1 * HOUR_IN_SECONDS );
+	}
 	?>
 
 	<h3>Points (ordered by first name)</h3>
@@ -162,8 +172,12 @@ function sabs_student_report() {
 		return ob_get_clean();
 	}
 
-	$query_guts		 = sabs_get_posts_with_points_query( $student_category );
-	$report_student	 = $wpdb->get_results( $query_guts );
+	$query_guts	 = sabs_get_posts_with_points_query( $student_category );
+	if ( false === ( $report_student		 = get_transient( 'student_points_per_post_transient_' . $student_category ) ) ) {
+		// It wasn't there, so regenerate the data and save the transient
+		$report_student = $wpdb->get_results( $query_guts );
+		set_transient( 'student_points_per_post_transient_' . $student_category, $report_student, 1 * HOUR_IN_SECONDS );
+	}
 	?>
 		<h3>Your Points</h3>
 
