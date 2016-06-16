@@ -40,6 +40,7 @@ class SabsTrackerSettingsPage
         // Set class property
         $this->options_categories = get_option( 'sabs_tracker_categories' );
         $this->options_limits = get_option( 'sabs_tracker_limits' );
+        $this->options_users = get_option( 'sabs_tracker_user_category' );
         ?>
         <div class="wrap">
             <h2>Sabs Tracker Settings</h2>           
@@ -62,6 +63,7 @@ class SabsTrackerSettingsPage
     {        
         $this->initialize_categories_section();
 		$this->initialize_limits_section();
+		$this->initialize_user_category_section();
     }
 
     /**
@@ -101,6 +103,16 @@ class SabsTrackerSettingsPage
 
 
         return $new_input;
+    }
+    /**
+     * Sanitize each setting field as needed
+     *
+     * @param array $input Contains all settings fields as array keys
+     */
+    public function sanitize_user_category_section( $input )
+    {
+		//todo
+        return $input;
     }
 
     /** 
@@ -179,7 +191,85 @@ class SabsTrackerSettingsPage
             isset( $this->options_limits['total_limit'] ) ? esc_attr( $this->options_limits['total_limit']) : ''
         );
     }
+	
+	/**
+	 * Print table for attaching users to category
+	 */
+	public function user_category_callback() {
+		$related_users_categories	 = $this->options_users[ 'user_category' ];
+		$available_users			 = get_users( array( 'fields' => array( 'ID', 'display_name' ) ) );
+		$categories					 = get_terms(
+		'category', array(
+			'hide_empty' => 0,
+			'fields'	 => 'id=>name'
+		)
+		);
+		if ( !isset( $related_users_categories ) || count( $related_users_categories ) === 0 ) {
+			$related_users_categories = array(
+				'0' => array(
+					'user_id'		 => -1,
+					'category_id'	 => -1
+				)
+			);
+		}
 
+		echo '<table>';
+		echo '	<thead>';
+		echo '		<tr>';
+		echo '			<th>User</th>';
+		echo '			<th>Category</th>';
+		echo '			<th>Remove</th>';
+		echo '		</tr>';
+		echo '	</thead>';
+		echo '	<tbody>';
+		foreach ( $related_users_categories as $user_cat_key => $user_cat ) {
+			echo '		<tr id="' . $user_cat_key . '">';
+			echo '			<td>';
+			echo $this->user_selectbox( $available_users, $user_cat_key );
+			echo '			</td>';
+			echo '			<td>';
+			echo $this->category_selectbox( $categories, $user_cat_key );
+			echo '			</td>';
+			echo '			<td><a href="#" class="sabs_remove_row" tilte="Remove row">Remove</a></td>';
+			echo '		</tr>';
+		}
+		echo '		<tr id="-1">';
+		echo '			<td></td><td></td><td><a href="#" class="sabs_add_row" title="Add row">Add row</a></td>';
+		echo '		</tr>';
+		echo '	</tbody>';
+		echo '</table>';
+	}
+
+	public function user_selectbox( $available_users, $user_cat_key ) {
+		$html = '';
+		$html .= '<select class="sabs_user_id" name="sabs_tracker_user_category[user_category][' . $user_cat_key . '][user_id]">';
+		$html .= '<option value="-1">Nothing Selected</option>';
+		foreach ( $available_users as $user ) {
+			$html .= sprintf(
+			'<option value="%s" %s/>%s</option>', esc_attr( $user->ID ),
+				$user->ID == $this->options_users[ 'user_category' ][ $user_cat_key ][ 'user_id' ] ? 'selected="selected"' : '',
+				$user->display_name
+			);
+		}
+
+		$html .= '</select>';
+		return $html;
+	}
+
+	public function category_selectbox( $categories, $user_cat_key ) {
+		$html .= '<select class="sabs_category_id" name="sabs_tracker_user_category[user_category][' . $user_cat_key . '][category_id]">';
+		$html .= '<option value="-1">Nothing Selected</option>';
+		foreach ( $categories as $category_id => $category_name ) {
+			$html .= sprintf(
+			'<option value="%s" %s/>%s</option>', esc_attr( $category_id ),
+				$category_id == $this->options_users[ 'user_category' ][ $user_cat_key ][ 'category_id' ] ? 'selected="selected"' : '',
+				$category_name
+			);
+		}
+
+		$html .= '</select>';
+		return $html;
+	}
 
 	/**
 	 * Retrive parent categories
@@ -265,6 +355,30 @@ class SabsTrackerSettingsPage
             'sabs_limits_section_id' // Section           
         );      
 
+	}
+	
+	
+	public function initialize_user_category_section() {
+		register_setting(
+            'sabs_tracker_group', // Option group
+            'sabs_tracker_user_category', // Option name
+            array( $this, 'sanitize_user_category_section' ) // Sanitize
+        );
+
+        add_settings_section(
+            'sabs_user_category_section_id', // ID
+            'Attach user to category', // Title
+            array( $this, 'print_section_info' ), // Callback
+            'sabs-tracker-settings' // Page
+        );  
+
+        add_settings_field(
+            'user_category', // ID
+            'Map user to category', // Title 
+            array( $this, 'user_category_callback' ), // Callback
+            'sabs-tracker-settings', // Page
+            'sabs_user_category_section_id' // Section           
+        );      
 	}
 
 }

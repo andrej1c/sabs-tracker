@@ -10,10 +10,10 @@
  * Author URI: http://southatlanta.bike
  */
 
-function sabs_get_points_query( $student_category_id = 0 ) {
+function sabs_get_points_query( $student_category_id = 0, $term_id = 0 ) {
 	if ( empty( $student_category_id ) ) {
 		// Refactor to not have a hard coded category ID
-		return "
+		return sprintf( "
 SELECT t.name, SUM(pm.meta_value) as points
 FROM wp_terms t
 INNER JOIN wp_term_taxonomy tt ON tt.term_id = t.term_id
@@ -21,9 +21,9 @@ LEFT JOIN wp_term_relationships tr ON tr.term_taxonomy_id = tt.term_taxonomy_id
 LEFT JOIN wp_posts p ON p.ID = tr.object_id
 LEFT JOIN wp_postmeta pm ON pm.post_id = p.ID
 WHERE tt.taxonomy = 'category'
-AND tt.parent = 3
+AND tt.parent = %d
 AND pm.meta_key = 'sabs_points'
-GROUP BY t.term_id";
+GROUP BY t.term_id", $term_id );
 	} else {
 		return sprintf( "
 SELECT t.name, SUM(pm.meta_value) as points
@@ -39,6 +39,21 @@ GROUP BY t.term_id", $student_category_id );
 	}
 }
 
+function sabs_get_posts_with_points_query( $student_category_id = 0 ) {
+		// Refactor to not have a hard coded category ID
+		return sprintf( "
+SELECT p.post_date as date, pm.meta_value as points
+FROM wp_terms t
+INNER JOIN wp_term_taxonomy tt ON tt.term_id = t.term_id
+LEFT JOIN wp_term_relationships tr ON tr.term_taxonomy_id = tt.term_taxonomy_id
+LEFT JOIN wp_posts p ON p.ID = tr.object_id
+LEFT JOIN wp_postmeta pm ON pm.post_id = p.ID
+WHERE tt.taxonomy = 'category'
+AND tt.term_id = %d
+AND pm.meta_key = 'sabs_points'
+", $student_category_id );
+}
+
 /**
  * Show report
  * @global class $wpdb
@@ -47,7 +62,8 @@ GROUP BY t.term_id", $student_category_id );
 function sabs_report() {
 	global $wpdb;
 	ob_start();
-	$query_guts = sabs_get_points_query();
+	$tracker_categories	 = get_option( 'sabs_tracker_categories' );
+	$query_guts			 = sabs_get_points_query( 0, $tracker_categories[ 'youth_category' ] );
 	$report_query_alpha  = $query_guts . " ORDER BY t.name ASC";
 	$report_query_points = $query_guts . " ORDER BY points DESC";
 	?>
@@ -116,6 +132,66 @@ function my_page_template_redirect() {
 	}
 }
 add_action( 'template_redirect', 'my_page_template_redirect' );
+
+/**
+ * Show report for student
+ * @global class $wpdb
+ * @return string HTML report
+ */
+function sabs_student_report() {
+	global $wpdb;
+	ob_start();
+	$bye_text				 = '<h2>You have no record of points yet!</h2>';
+	$tracker_user_category	 = get_option( 'sabs_tracker_user_category' );
+	if ( !$tracker_user_category ) {
+		return ob_get_clean();
+	}
+	$user_categories_r	 = $tracker_user_category[ 'user_category' ];
+	$student_category	 = false;
+	$current_user_id	 = get_current_user_id();
+
+	foreach ( $user_categories_r as $user_category ) {
+		if ( $user_category[ 'user_id' ] == $current_user_id ) {
+			$student_category = $user_category[ 'category_id' ];
+			break;
+		}
+	}
+
+	if ( !$student_category ) {
+		echo $bye_text;
+		return ob_get_clean();
+	}
+
+	$query_guts		 = sabs_get_posts_with_points_query( $student_category );
+	$report_student	 = $wpdb->get_results( $query_guts );
+	?>
+		<h3>Your Points</h3>
+
+		<table>
+			<tr><th>Date</th><th>Points</th></tr>
+			<?php
+			$count			 = 0;
+			foreach ( $report_student as $record ) {
+				$count += $record->points;
+				?>
+					<tr><td><?php echo $record->date; ?></td><td><?php echo $record->points; ?></td></tr>
+			<?php } ?>
+			<tr><td><strong>Total Points</strong></td><td><strong><?php echo $count; ?></strong></td></tr>
+		</table>
+
+		<hr />
+
+	<?php
+	return ob_get_clean();
+}
+
+add_shortcode( 'sabs_student_report', 'sabs_student_report' );
+
+function sabs_tracker_scripts_enqueue( $hook ) {
+	wp_enqueue_script( 'sabs_tracker_js', plugin_dir_url( __FILE__ ) . 'js/sabs-tracker.js' );
+}
+
+add_action( 'admin_enqueue_scripts', 'sabs_tracker_scripts_enqueue' );
 
 require_once 'points-metabox.php';
 require_once 'scheduling.php';
