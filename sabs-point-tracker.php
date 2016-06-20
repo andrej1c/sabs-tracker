@@ -154,6 +154,7 @@ function sabs_student_report() {
 	$bye_text				 = '<h2>You have no record of points yet!</h2>';
 	$tracker_user_category	 = get_option( 'sabs_tracker_user_category' );
 	if ( !$tracker_user_category ) {
+		echo $bye_text;
 		return ob_get_clean();
 	}
 	$user_categories_r	 = $tracker_user_category[ 'user_category' ];
@@ -202,10 +203,32 @@ function sabs_student_report() {
 add_shortcode( 'sabs_student_report', 'sabs_student_report' );
 
 function sabs_tracker_scripts_enqueue( $hook ) {
-	wp_enqueue_script( 'sabs_tracker_js', plugin_dir_url( __FILE__ ) . 'js/sabs-tracker.js' );
+	// Register the script
+	wp_register_script(  'sabs_tracker_js', plugin_dir_url( __FILE__ ) . 'js/sabs-tracker.js' );
+
+	// Localize the script with new data
+	$limits				 = get_option( 'sabs_tracker_limits' );
+	$tracker_categories	 = get_option( 'sabs_tracker_categories' );
+	wp_localize_script( 'sabs_tracker_js', 'limits', $limits );
+	wp_localize_script( 'sabs_tracker_js', 'categories', $tracker_categories );
+
+	// Enqueued script with localized data.
+	wp_enqueue_script( 'sabs_tracker_js' );
+
 }
 
 add_action( 'admin_enqueue_scripts', 'sabs_tracker_scripts_enqueue' );
+
+add_filter( 'wp_terms_checklist_args', 'wpse_98274_checklist_args' );
+
+/**
+ * Remove horrid feature that places checked categories on top.
+ */
+function wpse_98274_checklist_args( $args ) {
+
+	$args[ 'checked_ontop' ] = false;
+	return $args;
+}
 
 require_once 'points-metabox.php';
 require_once 'scheduling.php';

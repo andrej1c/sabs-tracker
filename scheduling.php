@@ -217,13 +217,17 @@ add_shortcode( 'sabs_schedule', 'sabs_schedule_view' );
 function sabs_schedule_single( $content ) {
 	$post = get_post();
 	if ( 'sabs_schedule' === $post->post_type ) {
-		$today_categories_a = wp_get_post_categories( $post->ID, array( 'fields' => 'names' ) );
-		$today_categories = array();
-		if ( ! empty( $today_categories_a ) ) {
-			foreach ( $today_categories_a as $category_name ) {
-				$today_categories[] = $category_name;
+		$today_categories_a	 = wp_get_post_categories( $post->ID, array( 'fields' => 'all' ) );
+		$tracker_categories	 = get_option( 'sabs_tracker_categories' );
+		$today_categories	 = array();
+		if ( !empty( $today_categories_a ) ) {
+			foreach ( $today_categories_a as $category ) {
+				$today_categories[ $category->parent ][] = $category->name;
 			}
-			$content .= sprintf( '<p>Signed Up: %s</p>', implode( ', ', $today_categories ) );
+			$content .= sprintf( '<p>Signed Up Students: %s</p>',
+						implode( ', ', $today_categories[ $tracker_categories[ 'youth_category' ] ] ) );
+			$content .= sprintf( '<p>Signed Up Volunteers: %s</p>',
+						implode( ', ', $today_categories[ $tracker_categories[ 'volunteers_category' ] ] ) );
 		}
 	}
 	return $content;
