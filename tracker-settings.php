@@ -257,6 +257,7 @@ class SabsTrackerSettingsPage
 	}
 
 	public function category_selectbox( $categories, $user_cat_key ) {
+		$html = '';
 		$html .= '<select class="sabs_category_id" name="sabs_tracker_user_category[user_category][' . $user_cat_key . '][category_id]">';
 		$html .= '<option value="-1">Nothing Selected</option>';
 		foreach ( $categories as $category_id => $category_name ) {

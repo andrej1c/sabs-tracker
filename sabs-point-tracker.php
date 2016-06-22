@@ -231,6 +231,7 @@ function wpse_98274_checklist_args( $args ) {
 }
 
 require_once 'points-metabox.php';
+require_once 'limits-metabox.php';
 require_once 'scheduling.php';
 require_once 'skills.php';
 require_once 'goals.php';

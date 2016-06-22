@@ -59,7 +59,7 @@ jQuery( document ).ready( function ( $ ) {
             var checkedTotal = $( "#categorychecklist input:checkbox:checked" ).length;
             var checkedYouth = $( "#category-" + youthCategory + " input:checkbox:checked" ).length;
             var checkedVolunteers = $( "#category-" + volunteersCategory + " input:checkbox:checked" ).length;
-
+            
             if ( 0 != limitYouth && checkedYouth > limitYouth ) {
                 // Hide the ajax loading image (gets fired when you hit the publish/update button)
                 $( ".spinner" ).hide();
@@ -68,10 +68,10 @@ jQuery( document ).ready( function ( $ ) {
                 $( "#publish" ).removeClass( 'button-primary-disabled' );
 
                 // Now fire off the alert
-                alert( "You can select only " + limitYouth + " from Youth category." );
+                alert( "Warning: You have selected more attendees then is allowed in Youth category. Allowed number is " + limitYouth);
 
                 // And return false
-                return false;
+//                return false;
             }
             if ( 0 != limitVolunteers && checkedVolunteers > limitVolunteers ) {
                 // Hide the ajax loading image (gets fired when you hit the publish/update button)
@@ -81,10 +81,9 @@ jQuery( document ).ready( function ( $ ) {
                 $( "#publish" ).removeClass( 'button-primary-disabled' );
 
                 // Now fire off the alert
-                alert( "You can select only " + limitVolunteers + " from Volunteers category." );
-
+                alert( "Warning: You have selected more attendees then is allowed in Volunteers category. Allowed number is " + limitVolunteers);
                 // And return false
-                return false;
+//                return false;
             }
             if ( 0 != limitTotal && checkedTotal > limitTotal ) {
                 // Hide the ajax loading image (gets fired when you hit the publish/update button)
@@ -94,10 +93,10 @@ jQuery( document ).ready( function ( $ ) {
                 $( "#publish" ).removeClass( 'button-primary-disabled' );
 
                 // Now fire off the alert
-                alert( "You can select only " + limitTotal + " in total from categories." );
+                alert( "Warning: You have selected more attendees then is allowed in total. Allowed number is " + limitTotal);
 
                 // And return false
-                return false;
+//                return false;
             }
         }
 
