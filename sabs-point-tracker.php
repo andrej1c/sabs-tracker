@@ -39,21 +39,6 @@ GROUP BY t.term_id", $student_category_id );
 	}
 }
 
-function sabs_get_posts_with_points_query( $student_category_id = 0 ) {
-		// Refactor to not have a hard coded category ID
-		return sprintf( "
-SELECT p.post_date as date, pm.meta_value as points
-FROM wp_terms t
-INNER JOIN wp_term_taxonomy tt ON tt.term_id = t.term_id
-LEFT JOIN wp_term_relationships tr ON tr.term_taxonomy_id = tt.term_taxonomy_id
-LEFT JOIN wp_posts p ON p.ID = tr.object_id
-LEFT JOIN wp_postmeta pm ON pm.post_id = p.ID
-WHERE tt.taxonomy = 'category'
-AND tt.term_id = %d
-AND pm.meta_key = 'sabs_points'
-", $student_category_id );
-}
-
 /**
  * Show report
  * @global class $wpdb
@@ -136,71 +121,23 @@ function sabs_show_points( $content ) {
 add_filter( 'the_content', 'sabs_show_points' );
 
 function my_page_template_redirect() {
-	if ( is_category() && ! isset( $_GET[ 'view_archive' ] ) ) {
-		wp_redirect( home_url( '/student-report/?student=' . get_query_var('cat') ) );
-        exit();
-	}
-}
-add_action( 'template_redirect', 'my_page_template_redirect' );
-
-/**
- * Show report for student
- * @global class $wpdb
- * @return string HTML report
- */
-function sabs_student_report() {
-	global $wpdb;
-	ob_start();
-	$bye_text				 = '<h2>You have no record of points yet!</h2>';
-	$tracker_user_category	 = get_option( 'sabs_tracker_user_category' );
-	if ( !$tracker_user_category ) {
-		echo $bye_text;
-		return ob_get_clean();
-	}
-	$user_categories_r	 = $tracker_user_category[ 'user_category' ];
-	$student_category	 = false;
-	$current_user_id	 = get_current_user_id();
-
-	foreach ( $user_categories_r as $user_category ) {
-		if ( $user_category[ 'user_id' ] == $current_user_id ) {
-			$student_category = $user_category[ 'category_id' ];
-			break;
+	if ( is_category() && !isset( $_GET[ 'view_archive' ] ) ) {
+		$tracker_pages = get_option( 'sabs_tracker_pages' );
+		if ( isset( $tracker_pages[ 'student_report' ] ) ) {
+			$report_page = $tracker_pages[ 'student_report' ];
+			$link		 = get_permalink( $report_page );
+		} else {
+			$link = home_url();
 		}
+		if ( current_user_can( 'administrator' ) ) {
+			$link .= '/?student=' . get_query_var( 'cat' );
+		}
+		wp_redirect( $link );
+		exit();
 	}
-
-	if ( !$student_category ) {
-		echo $bye_text;
-		return ob_get_clean();
-	}
-
-	$query_guts	 = sabs_get_posts_with_points_query( $student_category );
-	if ( false === ( $report_student		 = get_transient( 'student_points_per_post_transient_' . $student_category ) ) ) {
-		// It wasn't there, so regenerate the data and save the transient
-		$report_student = $wpdb->get_results( $query_guts );
-		set_transient( 'student_points_per_post_transient_' . $student_category, $report_student, 1 * HOUR_IN_SECONDS );
-	}
-	?>
-		<h3>Your Points</h3>
-
-		<table>
-			<tr><th>Date</th><th>Points</th></tr>
-			<?php
-			$count			 = 0;
-			foreach ( $report_student as $record ) {
-				$count += $record->points;
-				?>
-					<tr><td><?php echo $record->date; ?></td><td><?php echo $record->points; ?></td></tr>
-			<?php } ?>
-			<tr><td><strong>Total Points</strong></td><td><strong><?php echo $count; ?></strong></td></tr>
-		</table>
-
-		<hr />
-
-	<?php
-	return ob_get_clean();
 }
 
-add_shortcode( 'sabs_student_report', 'sabs_student_report' );
+add_action( 'template_redirect', 'my_page_template_redirect' );
 
 function sabs_tracker_scripts_enqueue( $hook ) {
 	// Register the script
@@ -230,6 +167,66 @@ function wpse_98274_checklist_args( $args ) {
 	return $args;
 }
 
+/**
+ * Redirect user after successful login.
+ *
+ * @param string $redirect_to URL to redirect to.
+ * @param string $request URL the user is coming from.
+ * @param object $user Logged user's data.
+ * @return string
+ */
+function sabs_tracker_login_redirect( $redirect_to, $request, $user ) {
+	//is there a user to check?
+	if ( isset( $user->roles ) && is_array( $user->roles ) ) {
+		//check for admins
+		if ( in_array( 'administrator', $user->roles ) ) {
+			// redirect them to the default place
+			return $redirect_to;
+		} else {
+			$tracker_pages = get_option( 'sabs_tracker_pages' );
+			if ( isset( $tracker_pages[ 'student_report' ] ) ) {
+				$report_page = $tracker_pages[ 'student_report' ];
+				return get_permalink( $report_page );
+			} else {
+				return $redirect_to;
+			}
+		}
+	} else {
+		return $redirect_to;
+	}
+}
+
+/**
+ * Prevent non admins to display categories, which are not theirs
+ * @param type $query
+ * @return type
+ */
+function sabs_tracker_mess_with_query( $query ) {
+	//is there a user to check?
+	if ( is_category() && !current_user_can( 'administrator' ) ) {
+		$options_categories	 = get_option( 'sabs_tracker_categories' );
+		$youth_cat			 = $options_categories[ 'youth_category' ];
+		$volunteers_cat		 = $options_categories[ 'volunteers_category' ];
+		if ( cat_is_ancestor_of( $youth_cat, get_queried_object_id() ) || cat_is_ancestor_of( $volunteers_cat, get_queried_object_id() ) ) {
+			$current_user_id = get_current_student_id();
+			if ( !$current_user_id || !is_category( $current_user_id ) ) {
+				sabs_tracker_unauthorized();
+			}
+		}
+	}
+	return $query;
+}
+
+add_filter( 'login_redirect', 'sabs_tracker_login_redirect', 10, 3 );
+
+add_filter( 'pre_get_posts', 'sabs_tracker_mess_with_query' );
+
+function sabs_tracker_unauthorized( ) {
+	global $wp_query;
+	$wp_query->set_404();
+	status_header( 404 );
+	get_template_part( 404 ); exit();
+}
 require_once 'points-metabox.php';
 require_once 'limits-metabox.php';
 require_once 'scheduling.php';
