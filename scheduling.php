@@ -180,21 +180,26 @@ function sabs_schedule_view() {
 		}
 		printf( '<p><strong>%s</strong></p>', sabs_pretty_date( $today ) );
 		$today_post_id = sabs_get_day_post( $today );
-		if ( ! empty( $today_post_id ) ) {
+		if ( !empty( $today_post_id ) ) {
 			// edit_post_link( 'Edit', '', '', $today_post_id, '' );
 			setup_postdata( $today_post_id );
 			the_content();
 			// get categories
-			$today_categories_a = wp_get_post_categories( $today_post_id, array( 'fields' => 'names' ) );
-			$today_categories = array();
-			if ( ! empty( $today_categories_a ) ) {
-				foreach ( $today_categories_a as $category_name ) {
-					$today_categories[] = $category_name;
+			$today_categories_a	 = wp_get_post_categories( $today_post_id, array( 'fields' => 'all' ) );
+			$limits_students	 = get_post_meta( $today_post_id, 'sabs_limits_students', true );
+			$limits_volunteers	 = get_post_meta( $today_post_id, 'sabs_limits_volunteers', true );
+
+			$tracker_categories	 = get_option( 'sabs_tracker_categories' );
+			$today_categories	 = array();
+			if ( !empty( $today_categories_a ) ) {
+				foreach ( $today_categories_a as $category ) {
+					$today_categories[ $category->parent ][] = $category->name;
 				}
-				printf( '<p>Signed Up (%d): </p><ul><li>%s</li></ul>', count( $today_categories ), implode( '</li><li>', $today_categories ) );
+				printf( '<p>Signed Up Students (%d/%d): </p><ul><li>%s</li></ul>', count( $today_categories[ $tracker_categories[ 'youth_category' ] ] ), $limits_students, implode( '</li><li>', $today_categories[ $tracker_categories[ 'youth_category' ] ] ) );
+				printf( '<p>Signed Up Volunteers (%d/%d): </p><ul><li>%s</li></ul>', count( $today_categories[ $tracker_categories[ 'volunteers_category' ] ] ), $limits_volunteers, implode( '</li><li>', $today_categories[ $tracker_categories[ 'volunteers_category' ] ] ) );
 			} else {
 				print '<p>Schedule set but no people selected.</p>';
-			}	
+			}
 		}
 	}
 	
@@ -217,13 +222,24 @@ add_shortcode( 'sabs_schedule', 'sabs_schedule_view' );
 function sabs_schedule_single( $content ) {
 	$post = get_post();
 	if ( 'sabs_schedule' === $post->post_type ) {
-		$today_categories_a = wp_get_post_categories( $post->ID, array( 'fields' => 'names' ) );
-		$today_categories = array();
-		if ( ! empty( $today_categories_a ) ) {
-			foreach ( $today_categories_a as $category_name ) {
-				$today_categories[] = $category_name;
+		$today_categories_a	 = wp_get_post_categories( $post->ID, array( 'fields' => 'all' ) );
+		$limits_students = get_post_meta( $post->ID, 'sabs_limits_students', true );
+		$limits_volunteers = get_post_meta( $post->ID, 'sabs_limits_volunteers', true );
+		
+		$tracker_categories	 = get_option( 'sabs_tracker_categories' );
+		$today_categories	 = array();
+		if ( !empty( $today_categories_a ) ) {
+			foreach ( $today_categories_a as $category ) {
+				$today_categories[ $category->parent ][] = $category->name;
 			}
-			$content .= sprintf( '<p>Signed Up: %s</p>', implode( ', ', $today_categories ) );
+			$content .= sprintf( '<p>Signed Up Students: %s<br />',
+						implode( ', ', $today_categories[ $tracker_categories[ 'youth_category' ] ] ) );
+			$content .= sprintf( 'Total Students: %d/%d</p>',
+						count($today_categories[ $tracker_categories[ 'youth_category' ] ]), $limits_students );
+			$content .= sprintf( '<p>Signed Up Volunteers: %s<br />',
+						implode( ', ', $today_categories[ $tracker_categories[ 'volunteers_category' ] ] ) );
+			$content .= sprintf( 'Total Volunteers: %d/%d</p>',
+						count($today_categories[ $tracker_categories[ 'volunteers_category' ] ]), $limits_volunteers );
 		}
 	}
 	return $content;
