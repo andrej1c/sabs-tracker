@@ -3,10 +3,11 @@ jQuery( document ).ready( function ( $ ) {
         e.preventDefault();
         var $this = $( this );
         var $closest_tr = $this.closest( 'tr' );
-
+        $(".chosen-select").chosen("destroy");
         add_new_row( $closest_tr, true );
-
+        $(".chosen-select").chosen();
     } );
+    $(".chosen-select").chosen();
 
     function add_new_row( $closest_tr, prev ) {
         var $closest_tbody = $closest_tr.closest( 'tbody' );

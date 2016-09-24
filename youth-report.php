@@ -32,17 +32,39 @@ function sabs_student( $content ) {
 		$points = $wpdb->get_results( $points_query );
 		set_transient( 'student_points_transient_' . $student_category_id, $points, 1 * HOUR_IN_SECONDS );
 	}
-	
+	print '<table class="sabs-student-report">';
+	print '<thead>';
+	print '<tr>';
 	if ( $points ) {
-		printf( '<h2>Student: %s</h2>', $points[ 0 ]->name );
-		printf( '<h3>Current Points: %s</h3>', $points[ 0 ]->points );
+		$sname = $points[ 0 ]->name;
 	} else {
-		print( '<h2>No points for this student yet.</h2>' );
+		if ( !isset( $student_category ) ) {
+			$student_category = get_category( $student_category_id );
+		}
+		$sname = $student_category->name;
 	}
-	printf( '<p><a href="%s?view_archive=yes">View Points History</a></p>', get_category_link( $student_category_id ) );
+	print ('<th>Student</th>');
+	printf( '<th>%s</rh>', $sname );
+	print '</tr>';
+	print '</thead>';
+	
+	print '<tbody>';
+	print '<tr>';
+	print( '<td>Current Points</td>');
+	if ( $points ) {
+		printf( '<td>%s ', $points[ 0 ]->points );
+	} else {
+		print( '<td>No points for this student yet. ' );
+	}
+	printf( ' - <a href="%s?view_archive=yes">View Points History</a></td>', get_category_link( $student_category_id ) );
+	print '</tr>';
+	
 	/*
 	 * Upcoming Schedule
 	 */
+	print '<tr>';
+	print( '<td>Scheduled for</td>');
+	print( '<td><ul>');
 	$schedule_query_args = array(
 		'post_type'      => 'sabs_schedule',
 		'post_status'    => 'future',
@@ -51,18 +73,22 @@ function sabs_student( $content ) {
 	);
 	$schedule_query = new WP_Query( $schedule_query_args );
 	if ( $schedule_query->have_posts() ) {
-		print( '<h2>Scheduled for</h2><ul>' );
 		while ( $schedule_query->have_posts() ) {
 			$schedule_query->the_post();
 			$title_date = sabs_pretty_date( get_the_title() );
 			printf( '<li><a href="%s">%s</a></li>', get_permalink( $schedule_query->post->ID ), $title_date );
 		}
-		print( '</ul>' );
+	} else {
+		print 'Nothing yet';
 	}
-	
+	print( '</td></ul>' );
+	print '</tr>';
 	/*
 	 * Skills
 	 */
+	print '<tr>';
+	print( '<td>Current Skills</td>');
+	print( '<td><ul>');
 	$skill_query_args = array(
 		'post_type'      => 'sabs_skill',
 		'post_status'    => 'publish',
@@ -71,19 +97,22 @@ function sabs_student( $content ) {
 	);
 	$skill_query = new WP_Query( $skill_query_args );
 	if ( $skill_query->have_posts() ) {
-		print( '<h2>Current Skills</h2><ul>' );
 		while ( $skill_query->have_posts() ) {
 			$skill_query->the_post();
 			printf( '<li><a href="%s">%s</a></li>', get_permalink( $skill_query->post->ID ), get_the_title() );
 		}
-		print( '</ul>' );
 	} else {
-		print( '<h3>No Skills on File</h3>' );
+		print( 'No Skills on File' );
 	}
+	print( '</td></ul>' );
+	print '</tr>';
 	
 	/*
 	 * Goals
 	 */
+	print '<tr>';
+	print( '<td>Goals For Student</td>');
+	print( '<td><ul>');
 	$goal_query_args = array(
 		'post_type'      => 'sabs_goal',
 		'post_status'    => 'publish',
@@ -92,16 +121,17 @@ function sabs_student( $content ) {
 	);
 	$goal_query = new WP_Query( $goal_query_args );
 	if ( $goal_query->have_posts() ) {
-		print( '<h2>Goals For Student:</h2><ul>' );
 		while ( $goal_query->have_posts() ) {
 			$goal_query->the_post();
 			printf( '<li><a href="%s">%s</a></li>', get_permalink( $goal_query->post->ID ), get_the_title() );
 		}
-		print( '</ul>' );
 	} else {
-		print( '<h3>No Goals on File</h3>' );
+		print( 'No Goals on File' );
 	}
-	
+	print( '</td></ul>' );
+	print '</tr>';
+	print '</tbody>';
+	print '</table>';
 	return ob_get_clean();
 }
 

@@ -140,8 +140,10 @@ function my_page_template_redirect() {
 add_action( 'template_redirect', 'my_page_template_redirect' );
 
 function sabs_tracker_scripts_enqueue( $hook ) {
+	wp_enqueue_style(  'sabs_chosen_css', plugin_dir_url( __FILE__ ) . 'css/chosen.min.css' );
+	wp_enqueue_script(  'sabs_chosen_js', plugin_dir_url( __FILE__ ) . 'js/chosen.jquery.min.js' );
 	// Register the script
-	wp_register_script(  'sabs_tracker_js', plugin_dir_url( __FILE__ ) . 'js/sabs-tracker.js' );
+	wp_register_script(  'sabs_tracker_js', plugin_dir_url( __FILE__ ) . 'js/sabs-tracker.min.js' );
 
 	// Localize the script with new data
 	$limits				 = get_option( 'sabs_tracker_limits' );
@@ -153,6 +155,13 @@ function sabs_tracker_scripts_enqueue( $hook ) {
 	wp_enqueue_script( 'sabs_tracker_js' );
 
 }
+
+function sabs_tracker_public_enqueue_scripts() {
+    wp_enqueue_style(  'sabs_tracker_css', plugin_dir_url( __FILE__ ) . 'css/sabs-point-tracker.min.css' );
+}
+
+add_action( 'wp_enqueue_scripts', 'sabs_tracker_public_enqueue_scripts' );
+
 
 add_action( 'admin_enqueue_scripts', 'sabs_tracker_scripts_enqueue' );
 

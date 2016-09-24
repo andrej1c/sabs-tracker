@@ -249,12 +249,13 @@ class SabsTrackerSettingsPage {
 		echo '		</tr>';
 		echo '	</tbody>';
 		echo '</table>';
+//		echo '<script type="text/javascript">jQuery( document ).ready(function() {});</script>';
 	}
 
 	public function user_selectbox( $available_users, $user_cat_key ) {
 		$html = '';
-		$html .= '<select class="sabs_user_id" name="sabs_tracker_user_category[user_category][' . $user_cat_key . '][user_id]">';
-		$html .= '<option value="-1">Nothing Selected</option>';
+		$html .= '<select class="sabs_user_id chosen-select" name="sabs_tracker_user_category[user_category][' . $user_cat_key . '][user_id]" data-placeholder="Nothing Selected">';
+		$html .= '<option value="-1"></option>';
 		foreach ( $available_users as $user ) {
 			$html .= sprintf(
 			'<option value="%s" %s/>%s</option>', esc_attr( $user->ID ), $user->ID == $this->options_users[ 'user_category' ][ $user_cat_key ][ 'user_id' ] ? 'selected="selected"' : '', $user->display_name
@@ -266,20 +267,33 @@ class SabsTrackerSettingsPage {
 	}
 
 	public function category_selectbox( $categories, $user_cat_key ) {
-		$html = '';
-		$html .= '<select class="sabs_category_id" name="sabs_tracker_user_category[user_category][' . $user_cat_key . '][category_id]">';
-		$html .= '<option value="-1">Nothing Selected</option>';
+		$html		 = '';
+		$html .= '<select class="sabs_category_id chosen-select" name="sabs_tracker_user_category[user_category][' . $user_cat_key . '][category_id]" data-placeholder="Nothing Selected">';
+		$html .= '<option value="-1"></option>';
+		$categories_r	 = array(
+			'Students'	 => array(),
+			'Volunteers' => array()
+		);
 		foreach ( $categories as $category ) {
 			$parent = '';
 			if ( $this->options_categories[ 'youth_category' ] == $category->parent ) {
-				$parent = '--Student';
+				$categories_r[ 'Students' ][] = $category;
 			} else if ( $this->options_categories[ 'volunteers_category' ] == $category->parent ) {
-				$parent = '--Volunteers';
+				$categories_r[ 'Volunteers' ][] = $category;
+			} else {
+				continue;
 			}
-			$html .= sprintf(
-			'<option value="%s" %s/>%s</option>', esc_attr( $category->term_id ), $category->term_id == $this->options_users[ 'user_category' ][ $user_cat_key ][ 'category_id' ] ? 'selected="selected"' : '', $category->name . $parent
-			);
 		}
+		foreach ( $categories_r as $key => $parents ) {
+			$html.= '<optgroup label="' . $key . '">';
+			foreach ( $parents as $category ) {
+				$html .= sprintf(
+				'<option value="%s" %s/>%s</option>', esc_attr( $category->term_id ), $category->term_id == $this->options_users[ 'user_category' ][ $user_cat_key ][ 'category_id' ] ? 'selected="selected"' : '', $category->name . $parent
+				);
+			}
+			$html.= '</optgroup>';
+		}
+
 
 		$html .= '</select>';
 		return $html;
