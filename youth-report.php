@@ -157,20 +157,8 @@ add_action( 'template_redirect', 'student_report_page_template_redirect' );
  * @return boolean | ID
  */
 function get_current_student_id() {
-	$tracker_user_category = get_option( 'sabs_tracker_user_category' );
-	if ( !$tracker_user_category ) {
-		return false;
-	}
-	$user_categories_r	 = $tracker_user_category[ 'user_category' ];
-	$student_category_id = false;
 	$current_user_id	 = get_current_user_id();
-
-	foreach ( $user_categories_r as $user_category ) {
-		if ( $user_category[ 'user_id' ] == $current_user_id ) {
-			$student_category_id = $user_category[ 'category_id' ];
-			break;
-		}
-	}
+	$student_category_id = get_user_meta($current_user_id, 'sabs_user_category', true);
 	if ( !$student_category_id || -1 == $student_category_id ) {
 		return false;
 	} else {

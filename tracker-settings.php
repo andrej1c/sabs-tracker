@@ -207,100 +207,35 @@ class SabsTrackerSettingsPage {
 	 * Print table for attaching users to category
 	 */
 	public function user_category_callback() {
-		$related_users_categories	 = $this->options_users[ 'user_category' ];
-		$available_users			 = get_users( array( 'fields' => array( 'ID', 'display_name' ) ) );
-		$categories					 = get_terms(
-		'category', array(
-			'hide_empty' => 0,
-			'fields'	 => 'all'
-		)
-		);
-		if ( !isset( $related_users_categories ) || count( $related_users_categories ) === 0 ) {
-			$related_users_categories = array(
-				'0' => array(
-					'user_id'		 => -1,
-					'category_id'	 => -1
-				)
-			);
-		}
+		//predelat, aby to zobrazovalo jen nenamapovane usery
+		global $wpdb;
+		$sql = 'SELECT * FROM '. $wpdb->users . ' u WHERE NOT EXISTS (SELECT * FROM '. $wpdb->usermeta . ' um WHERE u.ID=um.user_id AND meta_key="sabs_user_category");';
+		$nonmapped_users = $wpdb->get_results($sql);
 
-		echo '<table>';
+		echo '<table class="sabs_mapped_users">';
 		echo '	<thead>';
 		echo '		<tr>';
 		echo '			<th>User</th>';
-		echo '			<th>Category</th>';
-		echo '			<th>Remove</th>';
+		echo '			<th>Link</th>';
 		echo '		</tr>';
 		echo '	</thead>';
 		echo '	<tbody>';
-		foreach ( $related_users_categories as $user_cat_key => $user_cat ) {
-			echo '		<tr id="' . $user_cat_key . '">';
+		foreach ( $nonmapped_users as $user ) {
+			echo '		<tr id="' . $user->ID . '">';
 			echo '			<td>';
-			echo $this->user_selectbox( $available_users, $user_cat_key );
+			echo $user->user_nicename;
 			echo '			</td>';
 			echo '			<td>';
-			echo $this->category_selectbox( $categories, $user_cat_key );
+			echo '			<a href="' . get_edit_user_link( $user->ID ) . '" target="_blank">Edit</a>';
 			echo '			</td>';
-			echo '			<td><a href="#" class="sabs_remove_row" tilte="Remove row">Remove</a></td>';
 			echo '		</tr>';
 		}
-		echo '		<tr id="-1">';
-		echo '			<td></td><td></td><td><a href="#" class="sabs_add_row" title="Add row">Add row</a></td>';
-		echo '		</tr>';
 		echo '	</tbody>';
 		echo '</table>';
-//		echo '<script type="text/javascript">jQuery( document ).ready(function() {});</script>';
-	}
-
-	public function user_selectbox( $available_users, $user_cat_key ) {
-		$html = '';
-		$html .= '<select class="sabs_user_id chosen-select" name="sabs_tracker_user_category[user_category][' . $user_cat_key . '][user_id]" data-placeholder="Nothing Selected">';
-		$html .= '<option value="-1"></option>';
-		foreach ( $available_users as $user ) {
-			$html .= sprintf(
-			'<option value="%s" %s/>%s</option>', esc_attr( $user->ID ), $user->ID == $this->options_users[ 'user_category' ][ $user_cat_key ][ 'user_id' ] ? 'selected="selected"' : '', $user->display_name
-			);
-		}
-
-		$html .= '</select>';
-		return $html;
-	}
-
-	public function category_selectbox( $categories, $user_cat_key ) {
-		$html		 = '';
-		$html .= '<select class="sabs_category_id chosen-select" name="sabs_tracker_user_category[user_category][' . $user_cat_key . '][category_id]" data-placeholder="Nothing Selected">';
-		$html .= '<option value="-1"></option>';
-		$categories_r	 = array(
-			'Students'	 => array(),
-			'Volunteers' => array()
-		);
-		foreach ( $categories as $category ) {
-			$parent = '';
-			if ( $this->options_categories[ 'youth_category' ] == $category->parent ) {
-				$categories_r[ 'Students' ][] = $category;
-			} else if ( $this->options_categories[ 'volunteers_category' ] == $category->parent ) {
-				$categories_r[ 'Volunteers' ][] = $category;
-			} else {
-				continue;
-			}
-		}
-		foreach ( $categories_r as $key => $parents ) {
-			$html.= '<optgroup label="' . $key . '">';
-			foreach ( $parents as $category ) {
-				$html .= sprintf(
-				'<option value="%s" %s/>%s</option>', esc_attr( $category->term_id ), $category->term_id == $this->options_users[ 'user_category' ][ $user_cat_key ][ 'category_id' ] ? 'selected="selected"' : '', $category->name . $parent
-				);
-			}
-			$html.= '</optgroup>';
-		}
-
-
-		$html .= '</select>';
-		return $html;
 	}
 
 	/**
-	 * Retrive parent categories
+	 * Retrieve parent categories
 	 * @return array
 	 */
 	public function get_parent_categories() {
@@ -423,7 +358,7 @@ class SabsTrackerSettingsPage {
 
 		add_settings_field(
 			'user_category', // ID
-			'Map user to category', // Title 
+			'Not mapped users to any category', // Title 
 			array( $this, 'user_category_callback' ), // Callback
 			'sabs-tracker-settings', // Page
 			'sabs_user_category_section_id' // Section           
