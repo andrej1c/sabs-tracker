@@ -237,6 +237,31 @@ function sabs_tracker_unauthorized( ) {
 	status_header( 404 );
 	get_template_part( 404 ); exit();
 }
+
+function sabs_rest_get_students() {
+	$tracker_categories	 = get_option( 'sabs_tracker_categories' );
+	$cat				 = $tracker_categories['youth_category'];
+	$categories			 = get_terms(
+	'category', array(
+		'hide_empty' => 0,
+		'fields'	 => 'all',
+		'child_of'	 => $cat
+	)
+	);
+	if ( empty( $categories ) ) {
+		return null;
+	}
+
+	return $categories;
+}
+
+add_action( 'rest_api_init', function () {
+  register_rest_route( 'sabs-tracker/v1', '/students/all', array(
+    'methods' => 'GET',
+    'callback' => 'sabs_rest_get_students',
+  ) );
+} );
+
 require_once 'points-metabox.php';
 require_once 'limits-metabox.php';
 require_once 'user-category-metabox.php';
