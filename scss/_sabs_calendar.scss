@@ -1,0 +1,62 @@
+.sabs-day-row{
+    &{
+        border-top: 1px solid #ccc;
+        display: inline-block;
+        width: 100%;
+        padding-top: 15px;
+        margin-bottom: 15px;
+    }
+    .sabs-calendar{
+        &{
+            display: block;
+            width: 100px;
+            height: 130px;
+            float: left;
+            text-align: center;
+            margin-right: 15px;
+            margin-bottom: 10px;
+            background-color: #6495ED;
+            color: #fff;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+            -webkit-box-shadow:  0 4px 4px 0 rgba(50, 50, 50, 0.4);
+            -moz-box-shadow:  0 4px 4px 0 rgba(50, 50, 50, 0.4);
+            box-shadow:  0 4px 4px 0 rgba(50, 50, 50, 0.4);
+
+        }
+        span{
+            display: inline-block;
+            width: 100%;
+        }
+        .sabs-day{
+            font-size: 52px;
+            line-height: normal;
+        }
+
+        .sabs-weekday{
+            margin-top: 5px;
+        }
+
+        .sabs-monthyear{
+            font-size: 12px;
+        }
+    }
+
+    .sabs-description{
+        &{
+            float: left;
+            width: 75%;
+        }
+        @media (max-width: 350px) {
+            width: 100%;
+        }
+
+
+        p, ul{
+            margin-bottom: 5px;
+        }
+
+    }
+}
+
