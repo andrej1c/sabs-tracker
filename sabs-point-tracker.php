@@ -256,9 +256,44 @@ function sabs_rest_get_students() {
 }
 
 add_action( 'rest_api_init', function () {
-  register_rest_route( 'sabs-tracker/v1', '/students/all', array(
-    'methods' => 'GET',
-    'callback' => 'sabs_rest_get_students',
+	register_rest_route( 'sabs-tracker/v1', '/students/all', array(
+		'methods'	 => 'GET',
+		'callback'	 => 'sabs_rest_get_students',
+	) );
+} );
+
+function sabs_rest_points_add() {
+	$name	 = absint( filter_input( INPUT_POST, 'student_name' ) );
+	$points	 = absint( filter_input( INPUT_POST, 'points' ) );
+	$date	 = esc_attr( filter_input( INPUT_POST, 'date' ) );
+	$comment = esc_html( filter_input( INPUT_POST, 'comment' ) );
+	if ( empty( $name ) || empty( $points ) || empty( $date ) ) {
+		return 'error';
+	}
+//	$current_user	 = wp_get_current_user();
+	$student_name	 = get_category( $name );
+
+	$post_params = array(
+		'post_title'	 => ( $student_name->name . ' got ' . $points . (1 === $points ? ' point' : ' points') ),
+		'post_content'	 => $comment,
+		'post_status'	 => 'publish',
+		'post_author'	 => 1, //authentication not working..
+		'post_type'		 => 'post',
+		'post_date'		 => $date,
+	);
+	
+	$post_id	 = wp_insert_post( $post_params );
+//	return $post_id;
+	update_post_meta( $post_id, 'sabs_points', $points );
+
+	$term_taxonomy_ids = wp_set_object_terms( $post_id, [$student_name->term_id], 'category' );
+	return 'success';
+}
+
+add_action( 'rest_api_init', function () {
+  register_rest_route( 'sabs-tracker/v1', '/points/add', array(
+    'methods' => 'POST',
+    'callback' => 'sabs_rest_points_add',
   ) );
 } );
 
