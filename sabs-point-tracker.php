@@ -270,14 +270,18 @@ function sabs_rest_points_add() {
 	if ( empty( $name ) || empty( $points ) || empty( $date ) ) {
 		return 'error';
 	}
-//	$current_user	 = wp_get_current_user();
+	$current_user = wp_get_current_user();
+	if ( 0 == $current_user->ID ) {
+		return 'error';
+	}
 	$student_name	 = get_category( $name );
+	//check if user is logged in
 
 	$post_params = array(
 		'post_title'	 => ( $student_name->name . ' got ' . $points . (1 === $points ? ' point' : ' points') ),
 		'post_content'	 => $comment,
 		'post_status'	 => 'publish',
-		'post_author'	 => 1, //authentication not working..
+		'post_author'	 => $current_user->ID,
 		'post_type'		 => 'post',
 		'post_date'		 => $date,
 	);
