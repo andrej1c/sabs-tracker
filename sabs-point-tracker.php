@@ -270,12 +270,12 @@ function sabs_rest_points_add() {
 	if ( empty( $name ) || empty( $points ) || empty( $date ) ) {
 		return 'error';
 	}
+	//check if user is logged in
 	$current_user = wp_get_current_user();
 	if ( 0 == $current_user->ID ) {
 		return 'error';
 	}
 	$student_name	 = get_category( $name );
-	//check if user is logged in
 
 	$post_params = array(
 		'post_title'	 => ( $student_name->name . ' got ' . $points . (1 === $points ? ' point' : ' points') ),
@@ -298,6 +298,45 @@ add_action( 'rest_api_init', function () {
   register_rest_route( 'sabs-tracker/v1', '/points/add', array(
     'methods' => 'POST',
     'callback' => 'sabs_rest_points_add',
+  ) );
+} );
+function sabs_rest_points_subtract() {
+	$name	 = absint( filter_input( INPUT_POST, 'student_name' ) );
+	$points	 = absint( filter_input( INPUT_POST, 'points' ) );
+	$date	 = esc_attr( filter_input( INPUT_POST, 'date' ) );
+	$category = esc_html( filter_input( INPUT_POST, 'category' ) );
+	if ( empty( $name ) || empty( $points ) || empty( $date ) ) {
+		return 'error';
+	}
+	//check if user is logged in
+	$current_user = wp_get_current_user();
+	if ( 0 == $current_user->ID ) {
+		return 'error';
+	}
+	$student_name	 = get_category( $name );
+
+	$post_params = array(
+		'post_title'	 => ( $student_name->name . ' spent ' . $points 
+		. (1 === $points ? ' point' : ' points' . ( ! empty( $category ) ? ' on ' . $category : '')) ),
+		'post_content'	 => '',
+		'post_status'	 => 'publish',
+		'post_author'	 => $current_user->ID,
+		'post_type'		 => 'post',
+		'post_date'		 => $date,
+	);
+	
+	$post_id	 = wp_insert_post( $post_params );
+//	return $post_id;
+	update_post_meta( $post_id, 'sabs_points', $points );
+
+	$term_taxonomy_ids = wp_set_object_terms( $post_id, [$student_name->term_id], 'category' );
+	return 'success';
+}
+
+add_action( 'rest_api_init', function () {
+  register_rest_route( 'sabs-tracker/v1', '/points/subtract', array(
+    'methods' => 'POST',
+    'callback' => 'sabs_rest_points_subtract',
   ) );
 } );
 
