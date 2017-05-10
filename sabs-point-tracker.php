@@ -270,6 +270,11 @@ function sabs_rest_points_add() {
 	if ( empty( $name ) || empty( $points ) || empty( $date ) ) {
 		return 'error';
 	}
+	$date			 = new DateTime( $date );
+	$now			 = new DateTime( 'now' );
+	$today			 = new DateTime( date( 'Y-m-d' ) );
+	$time			 = $today->diff( $now );
+	$date->add( $time );
 	//check if user is logged in
 	$current_user = wp_get_current_user();
 	if ( 0 == $current_user->ID ) {
@@ -283,11 +288,10 @@ function sabs_rest_points_add() {
 		'post_status'	 => 'publish',
 		'post_author'	 => $current_user->ID,
 		'post_type'		 => 'post',
-		'post_date'		 => $date,
+		'post_date'		 => $date->format( 'Y-m-d H:i:s' ),
 	);
 	
 	$post_id	 = wp_insert_post( $post_params );
-//	return $post_id;
 	update_post_meta( $post_id, 'sabs_points', $points );
 
 	$term_taxonomy_ids = wp_set_object_terms( $post_id, [$student_name->term_id], 'category' );
@@ -304,10 +308,16 @@ function sabs_rest_points_subtract() {
 	$name	 = absint( filter_input( INPUT_POST, 'student_name' ) );
 	$points	 = absint( filter_input( INPUT_POST, 'points' ) );
 	$date	 = esc_attr( filter_input( INPUT_POST, 'date' ) );
-	$category = esc_html( filter_input( INPUT_POST, 'category' ) );
+	$category = esc_attr( filter_input( INPUT_POST, 'category' ) );
+
 	if ( empty( $name ) || empty( $points ) || empty( $date ) ) {
 		return 'error';
 	}
+	$date			 = new DateTime( $date );
+	$now			 = new DateTime( 'now' );
+	$today			 = new DateTime( date( 'Y-m-d' ) );
+	$time			 = $today->diff( $now );
+	$date->add( $time );
 	//check if user is logged in
 	$current_user = wp_get_current_user();
 	if ( 0 == $current_user->ID ) {
@@ -317,16 +327,15 @@ function sabs_rest_points_subtract() {
 
 	$post_params = array(
 		'post_title'	 => ( $student_name->name . ' spent ' . $points 
-		. (1 === $points ? ' point' : ' points' . ( ! empty( $category ) ? ' on ' . $category : '')) ),
+		. ( ( 1 === $points ) ? ' point' : ' points' ) . ( ! empty( $category ) ? ( ' on ' . $category ) : '' ) ),
 		'post_content'	 => '',
 		'post_status'	 => 'publish',
 		'post_author'	 => $current_user->ID,
 		'post_type'		 => 'post',
-		'post_date'		 => $date,
+		'post_date'		 => $date->format( 'Y-m-d H:i:s' ),
 	);
 	
 	$post_id	 = wp_insert_post( $post_params );
-//	return $post_id;
 	update_post_meta( $post_id, 'sabs_points', $points );
 
 	$term_taxonomy_ids = wp_set_object_terms( $post_id, [$student_name->term_id], 'category' );
