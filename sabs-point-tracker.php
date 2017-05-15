@@ -283,14 +283,14 @@ function sabs_rest_points_add() {
 	$student_name	 = get_category( $name );
 
 	$post_params = array(
-		'post_title'	 => ( $student_name->name . ' got ' . $points . (1 === $points ? ' point' : ' points') ),
+		'post_title'	 => sprintf( '%s got %d %s', $student_name->name, $points, (1 === $points ? ' point' : ' points' ) ),
 		'post_content'	 => $comment,
 		'post_status'	 => 'publish',
 		'post_author'	 => $current_user->ID,
 		'post_type'		 => 'post',
 		'post_date'		 => $date->format( 'Y-m-d H:i:s' ),
 	);
-	
+
 	$post_id	 = wp_insert_post( $post_params );
 	update_post_meta( $post_id, 'sabs_points', $points );
 
@@ -326,19 +326,57 @@ function sabs_rest_points_subtract() {
 	$student_name	 = get_category( $name );
 
 	$post_params = array(
-		'post_title'	 => ( $student_name->name . ' spent ' . $points 
-		. ( ( 1 === $points ) ? ' point' : ' points' ) . ( ! empty( $category ) ? ( ' on ' . $category ) : '' ) ),
+		'post_title'	 => sprintf( '%s spent %d %s %s', $student_name->name, $points, ( ( 1 === $points ) ? ' point' : ' points' ), ( ! empty( $category ) ? ( ' on ' . $category ) : '' ) ),
 		'post_content'	 => '',
 		'post_status'	 => 'publish',
 		'post_author'	 => $current_user->ID,
 		'post_type'		 => 'post',
 		'post_date'		 => $date->format( 'Y-m-d H:i:s' ),
 	);
-	
+
 	$post_id	 = wp_insert_post( $post_params );
 	update_post_meta( $post_id, 'sabs_points', $points );
 
 	$term_taxonomy_ids = wp_set_object_terms( $post_id, [$student_name->term_id], 'category' );
+	return 'success';
+}
+
+add_action( 'rest_api_init', function () {
+  register_rest_route( 'sabs-tracker/v1', '/points/subtract', array(
+    'methods' => 'POST',
+    'callback' => 'sabs_rest_points_subtract',
+  ) );
+} );
+function sabs_rest_points_transfer() {
+	$name_from	 = absint( filter_input( INPUT_POST, 'student_name_from' ) );
+	$name_to	 = absint( filter_input( INPUT_POST, 'student_name_to' ) );
+	$points	 = absint( filter_input( INPUT_POST, 'points' ) );
+
+	if ( empty( $name_from ) || empty( $points ) || empty( $name_to ) ) {
+		return 'error';
+	}
+	$date			 = new DateTime( date( 'Y-m-d' ) );
+	//check if user is logged in
+	$current_user = wp_get_current_user();
+	if ( 0 == $current_user->ID ) {
+		return 'error';
+	}
+	$student_name_from	 = get_category( $name_from );
+	$student_name_to	 = get_category( $name_to );
+
+	$post_params = array(
+		'post_title'	 => sprintf( '%s gave %s %d %s', $student_name_from->name, $student_name_to->name, $points, ( 1 === $points ) ? ' point' : ' points' ),
+		'post_content'	 => '',
+		'post_status'	 => 'publish',
+		'post_author'	 => $current_user->ID,
+		'post_type'		 => 'post',
+		'post_date'		 => $date->format( 'Y-m-d H:i:s' ),
+	);
+
+	$post_id	 = wp_insert_post( $post_params );
+	update_post_meta( $post_id, 'sabs_points', $points );
+
+	$term_taxonomy_ids = wp_set_object_terms( $post_id, [$student_name_to->term_id], 'category' );
 	return 'success';
 }
 
