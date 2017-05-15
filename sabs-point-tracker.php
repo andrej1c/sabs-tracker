@@ -381,10 +381,37 @@ function sabs_rest_points_transfer() {
 }
 
 add_action( 'rest_api_init', function () {
-  register_rest_route( 'sabs-tracker/v1', '/points/subtract', array(
+  register_rest_route( 'sabs-tracker/v1', '/points/transfer', array(
     'methods' => 'POST',
-    'callback' => 'sabs_rest_points_subtract',
+    'callback' => 'sabs_rest_points_transfer',
   ) );
+} );
+
+function sabs_rest_student_add() {
+	$name = esc_attr( filter_input( INPUT_POST, 'student_name' ) );
+
+	if ( empty( $name ) ) {
+		return 'error';
+	}
+	//check if user is logged in
+	$current_user = wp_get_current_user();
+	if ( 0 == $current_user->ID ) {
+		return 'error';
+	}
+	$tracker_categories	 = get_option( 'sabs_tracker_categories' );
+	$cat				 = $tracker_categories['youth_category'];
+	if ( term_exists( $name, 'category', $cat ) ) {
+		return 'exists';
+	}
+	wp_insert_term( $name, 'category', ['parent' => $cat] );
+	return 'success';
+}
+
+add_action( 'rest_api_init', function () {
+	register_rest_route( 'sabs-tracker/v1', '/student/add', array(
+		'methods'	 => 'POST',
+		'callback'	 => 'sabs_rest_student_add',
+	) );
 } );
 
 require_once 'points-metabox.php';
