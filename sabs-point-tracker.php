@@ -460,7 +460,6 @@ function sabs_rest_student_get() {
 		'points' => $points_m,
 		'history' => $history
 	];
-	//get rest of data..
 	return $data;
 }
 
@@ -470,6 +469,35 @@ add_action( 'rest_api_init', function () {
 		'callback'	 => 'sabs_rest_student_get',
 	) );
 } );
+
+
+function sabs_rest_students_report() {
+	//check if user is logged in
+//	$current_user = wp_get_current_user();
+//	if ( 0 == $current_user->ID ) {
+//		return 'error';
+//	}
+	global $wpdb;
+	$tracker_categories	 = get_option( 'sabs_tracker_categories' );
+	$cat				 = $tracker_categories[ 'youth_category' ];
+	$query_guts			 = sabs_get_points_query( 0, $cat );
+	$report_query_alpha  = $query_guts . " ORDER BY t.name ASC";
+
+	if ( false === ( $report_alpha		 = get_transient( 'report_alpha_transient_' . $cat ) ) ) {
+		// It wasn't there, so regenerate the data and save the transient
+		$report_alpha = $wpdb->get_results( $report_query_alpha );
+		set_transient( 'report_alpha_transient_' . $cat, $report_alpha, 1 * HOUR_IN_SECONDS );
+	}
+	return $report_alpha;
+}
+
+add_action( 'rest_api_init', function () {
+	register_rest_route( 'sabs-tracker/v1', '/students/report', array(
+		'methods'	 => 'GET',
+		'callback'	 => 'sabs_rest_students_report',
+	) );
+} );
+
 
 register_rest_field( 'post', 'meta_points', array(
 	'get_callback' => function ( $data ) {
