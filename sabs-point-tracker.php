@@ -414,6 +414,63 @@ add_action( 'rest_api_init', function () {
 	) );
 } );
 
+function sabs_rest_student_get() {
+	$name = esc_attr( filter_input( INPUT_GET, 'student_slug' ) );
+
+	if ( empty( $name ) ) {
+		return 'error';
+	}
+	//check if user is logged in
+//	$current_user = wp_get_current_user();
+//	if ( 0 == $current_user->ID ) {
+//		return 'error';
+//	}
+	$student = get_term_by( 'slug', $name, 'category' );
+	if ( !$student ) {
+		return 'none';
+	}
+	global $wpdb;
+	$points_query	 = sabs_get_points_query( $student->term_id );
+	if ( false === ( $points			 = get_transient( 'student_points_transient_' . $student->term_id ) ) ) {
+		// It wasn't there, so regenerate the data and save the transient
+		$points = $wpdb->get_results( $points_query );
+		set_transient( 'student_points_transient_' . $student->term_id, $points, 1 * HOUR_IN_SECONDS );
+	}
+	$points_m = 'No points for this student yet. ';
+	if ( $points ) {
+		$points_m = $points[ 0 ]->points;
+	}
+	$history_posts	 = get_posts( [
+		'category'		 => $student->term_id,
+		'posts_per_page' => 100
+	] );
+	$history = [];
+	foreach ( $history_posts as $post ) {
+		setup_postdata( $post );
+		$history[] = [
+			'title'	 => $post->post_title,
+			'slug'	 => $post->post_name,
+			'author' => get_the_author_meta( 'user_nicename', $post->post_author ),
+			'points' => get_post_meta( $post->ID, 'sabs_points', true ),
+			'date'	 => $post->post_date
+		];
+	}
+	$data = [
+		'student' => $student,
+		'points' => $points_m,
+		'history' => $history
+	];
+	//get rest of data..
+	return $data;
+}
+
+add_action( 'rest_api_init', function () {
+	register_rest_route( 'sabs-tracker/v1', '/student/get', array(
+		'methods'	 => 'GET',
+		'callback'	 => 'sabs_rest_student_get',
+	) );
+} );
+
 require_once 'points-metabox.php';
 require_once 'limits-metabox.php';
 require_once 'user-category-metabox.php';
