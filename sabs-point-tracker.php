@@ -471,6 +471,11 @@ add_action( 'rest_api_init', function () {
 	) );
 } );
 
+register_rest_field( 'post', 'meta_points', array(
+	'get_callback' => function ( $data ) {
+		return get_post_meta( $data['id'], 'sabs_points', true );
+	},) );
+
 require_once 'points-metabox.php';
 require_once 'limits-metabox.php';
 require_once 'user-category-metabox.php';
