@@ -38,10 +38,6 @@ function sabs_rest_points_add() {
 		return 'error';
 	}
 	$date			 = new DateTime( $date );
-	$now			 = new DateTime( 'now' );
-	$today			 = new DateTime( date( 'Y-m-d' ) );
-	$time			 = $today->diff( $now );
-	$date->add( $time );
 	//check if user is logged in
 	$current_user	 = wp_get_current_user();
 	if ( 0 == $current_user->ID ) {
@@ -82,10 +78,6 @@ function sabs_rest_points_subtract() {
 		return 'error';
 	}
 	$date			 = new DateTime( $date );
-	$now			 = new DateTime( 'now' );
-	$today			 = new DateTime( date( 'Y-m-d' ) );
-	$time			 = $today->diff( $now );
-	$date->add( $time );
 	//check if user is logged in
 	$current_user	 = wp_get_current_user();
 	if ( 0 == $current_user->ID ) {
@@ -120,11 +112,12 @@ function sabs_rest_points_transfer() {
 	$name_from	 = absint( filter_input( INPUT_POST, 'student_name_from' ) );
 	$name_to	 = absint( filter_input( INPUT_POST, 'student_name_to' ) );
 	$points		 = absint( filter_input( INPUT_POST, 'points' ) );
+	$date		 = esc_attr( filter_input( INPUT_POST, 'date' ) );
 
 	if ( empty( $name_from ) || empty( $points ) || empty( $name_to ) ) {
 		return 'error';
 	}
-	$date			 = new DateTime( date( 'Y-m-d H:i:s' ) );
+	$date			 = new DateTime( $date );
 	//check if user is logged in
 	$current_user	 = wp_get_current_user();
 	if ( 0 == $current_user->ID ) {
@@ -146,7 +139,7 @@ function sabs_rest_points_transfer() {
 	update_post_meta( $post_id, 'sabs_points', $points );
 
 	$term_taxonomy_ids = wp_set_object_terms( $post_id, [$student_name_to->term_id], 'category' );
-	
+
 	$post_params = array(
 		'post_title'	 => sprintf( '%s gave %s %d %s', $student_name_from->name, $student_name_to->name, $points, ( 1 === $points ) ? ' point' : ' points' ),
 		'post_content'	 => '',
