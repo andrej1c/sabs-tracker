@@ -34,10 +34,18 @@ function sabs_rest_points_add() {
 	$points	 = absint( filter_input( INPUT_POST, 'points' ) );
 	$date	 = esc_attr( filter_input( INPUT_POST, 'date' ) );
 	$comment = esc_html( filter_input( INPUT_POST, 'comment' ) );
+	$offset_user = intval( filter_input( INPUT_POST, 'offset' ) );
 	if ( empty( $name ) || empty( $points ) || empty( $date ) ) {
 		return 'error';
 	}
+	$offset_server = get_option('gmt_offset');
+	$offset = $offset_server + $offset_user;
+	$interval = DateInterval::createfromdatestring( $offset . ' hour' );
 	$date			 = new DateTime( $date );
+	$date->add($interval);
+
+	// $time = strtotime($date );
+// get_option('timezone_string');
 	//check if user is logged in
 	$current_user	 = wp_get_current_user();
 	if ( 0 == $current_user->ID ) {
@@ -46,7 +54,7 @@ function sabs_rest_points_add() {
 	$student_name = get_category( $name );
 
 	$post_params = array(
-		'post_title'	 => sprintf( '%s got %d %s', $student_name->name, $points, (1 === $points ? ' point' : ' points' ) ),
+		'post_title'	 => sprintf( '%s got %d %s', $student_name->name, $points, (1 === $points ? 'point' : 'points' ) ),
 		'post_content'	 => $comment,
 		'post_status'	 => 'publish',
 		'post_author'	 => $current_user->ID,
@@ -73,11 +81,16 @@ function sabs_rest_points_subtract() {
 	$points		 = absint( filter_input( INPUT_POST, 'points' ) );
 	$date		 = esc_attr( filter_input( INPUT_POST, 'date' ) );
 	$category	 = esc_attr( filter_input( INPUT_POST, 'category' ) );
+	$offset_user = intval( filter_input( INPUT_POST, 'offset' ) );
 
 	if ( empty( $name ) || empty( $points ) || empty( $date ) ) {
 		return 'error';
 	}
+	$offset_server = get_option('gmt_offset');
+	$offset = $offset_server + $offset_user;
+	$interval = DateInterval::createfromdatestring( $offset . ' hour' );
 	$date			 = new DateTime( $date );
+	$date->add($interval);
 	//check if user is logged in
 	$current_user	 = wp_get_current_user();
 	if ( 0 == $current_user->ID ) {
@@ -86,7 +99,7 @@ function sabs_rest_points_subtract() {
 	$student_name = get_category( $name );
 
 	$post_params = array(
-		'post_title'	 => sprintf( '%s spent %d %s %s', $student_name->name, $points, ( ( 1 === $points ) ? ' point' : ' points' ), ( ! empty( $category ) ? ( ' on ' . $category ) : '' ) ),
+		'post_title'	 => sprintf( '%s spent %d %s %s', $student_name->name, $points, ( ( 1 === $points ) ? 'point' : 'points' ), ( ! empty( $category ) ? ( 'on ' . $category ) : '' ) ),
 		'post_content'	 => '',
 		'post_status'	 => 'publish',
 		'post_author'	 => $current_user->ID,
@@ -113,11 +126,16 @@ function sabs_rest_points_transfer() {
 	$name_to	 = absint( filter_input( INPUT_POST, 'student_name_to' ) );
 	$points		 = absint( filter_input( INPUT_POST, 'points' ) );
 	$date		 = esc_attr( filter_input( INPUT_POST, 'date' ) );
+	$offset_user = intval( filter_input( INPUT_POST, 'offset' ) );
 
 	if ( empty( $name_from ) || empty( $points ) || empty( $name_to ) ) {
 		return 'error';
 	}
+	$offset_server = get_option('gmt_offset');
+	$offset = $offset_server + $offset_user;
+	$interval = DateInterval::createfromdatestring( $offset . ' hour' );
 	$date			 = new DateTime( $date );
+	$date->add($interval);
 	//check if user is logged in
 	$current_user	 = wp_get_current_user();
 	if ( 0 == $current_user->ID ) {
@@ -127,7 +145,7 @@ function sabs_rest_points_transfer() {
 	$student_name_to	 = get_category( $name_to );
 
 	$post_params = array(
-		'post_title'	 => sprintf( '%s gave %s %d %s', $student_name_from->name, $student_name_to->name, $points, ( 1 === $points ) ? ' point' : ' points' ),
+		'post_title'	 => sprintf( '%s gave %s %d %s', $student_name_from->name, $student_name_to->name, $points, ( 1 === $points ) ? 'point' : 'points' ),
 		'post_content'	 => '',
 		'post_status'	 => 'publish',
 		'post_author'	 => $current_user->ID,
@@ -141,7 +159,7 @@ function sabs_rest_points_transfer() {
 	$term_taxonomy_ids = wp_set_object_terms( $post_id, [$student_name_to->term_id], 'category' );
 
 	$post_params = array(
-		'post_title'	 => sprintf( '%s gave %s %d %s', $student_name_from->name, $student_name_to->name, $points, ( 1 === $points ) ? ' point' : ' points' ),
+		'post_title'	 => sprintf( '%s gave %s %d %s', $student_name_from->name, $student_name_to->name, $points, ( 1 === $points ) ? 'point' : 'points' ),
 		'post_content'	 => '',
 		'post_status'	 => 'publish',
 		'post_author'	 => $current_user->ID,
