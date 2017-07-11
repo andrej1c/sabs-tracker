@@ -246,7 +246,7 @@ function sabs_rest_student_get() {
 			'slug'	 => $post->post_name,
 			'author' => get_the_author_meta( 'user_nicename', $post->post_author ),
 			'points' => get_post_meta( $post->ID, 'sabs_points', true ),
-			'date'	 => $post->post_date
+			'date'	 => ( strtotime( $post->post_date ) * 1000 )
 		];
 	}
 	$data = [
