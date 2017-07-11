@@ -1,0 +1,27 @@
+table.sabs-student-report{
+    & {
+        border-collapse: collapse;
+        border: 1px solid #ededed;
+    }
+
+    &, th, td {
+        border: 1px solid #ededed;
+    }
+    td, th{
+        padding-left: 15px;
+        font-size: 14px;
+    }
+    td:nth-child(1), th:nth-child(1){
+        width: 25%;
+        font-weight: bold;
+    }
+    ul{
+        &{
+            margin-bottom: 0px;
+        }
+
+        li{
+            margin-left: 15px;
+        }
+    }
+}
